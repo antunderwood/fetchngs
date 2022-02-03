@@ -102,33 +102,37 @@ workflow SRA {
         )
         ch_versions = ch_versions.mix(SRA_FASTQ_SRATOOLS.out.versions.first())
 
-        //
-        // MODULE: Stage FastQ files downloaded by SRA together and auto-create a samplesheet
-        //
-        SRA_TO_SAMPLESHEET (
-            SRA_FASTQ_FTP.out.fastq.mix(SRA_FASTQ_SRATOOLS.out.reads),
-            params.nf_core_pipeline ?: '',
-            params.sample_mapping_fields
-        )
-
-        //
-        // MODULE: Create a merged samplesheet across all samples for the pipeline
-        //
-        SRA_MERGE_SAMPLESHEET (
-            SRA_TO_SAMPLESHEET.out.samplesheet.collect{it[1]},
-            SRA_TO_SAMPLESHEET.out.mappings.collect{it[1]}
-        )
-        ch_versions = ch_versions.mix(SRA_MERGE_SAMPLESHEET.out.versions)
-
-        //
-        // MODULE: Create a MutiQC config file with sample name mappings
-        //
-        if (params.sample_mapping_fields) {
-            MULTIQC_MAPPINGS_CONFIG (
-                SRA_MERGE_SAMPLESHEET.out.mappings
+        if (!params.skip_multiqc){
+            //
+            // MODULE: Stage FastQ files downloaded by SRA together and auto-create a samplesheet
+            //
+            SRA_TO_SAMPLESHEET (
+                SRA_FASTQ_FTP.out.fastq.mix(SRA_FASTQ_SRATOOLS.out.reads),
+                params.nf_core_pipeline ?: '',
+                params.sample_mapping_fields
             )
-            ch_versions = ch_versions.mix(MULTIQC_MAPPINGS_CONFIG.out.versions)
+
+            //
+            // MODULE: Create a merged samplesheet across all samples for the pipeline
+            //
+            SRA_MERGE_SAMPLESHEET (
+                SRA_TO_SAMPLESHEET.out.samplesheet.collect{it[1]},
+                SRA_TO_SAMPLESHEET.out.mappings.collect{it[1]}
+            )
+            ch_versions = ch_versions.mix(SRA_MERGE_SAMPLESHEET.out.versions)
+
+            //
+            // MODULE: Create a MutiQC config file with sample name mappings
+            //
+            if (params.sample_mapping_fields) {
+                MULTIQC_MAPPINGS_CONFIG (
+                    SRA_MERGE_SAMPLESHEET.out.mappings
+                )
+                ch_versions = ch_versions.mix(MULTIQC_MAPPINGS_CONFIG.out.versions)
+            }
+
         }
+
     }
 
     //

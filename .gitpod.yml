@@ -1,0 +1,4 @@
+tasks:
+  - name: Install Nextflow
+    init: curl -s https://get.nextflow.io | bash
+    command: sudo mv nextflow /usr/local/bin

@@ -23,8 +23,9 @@ process SRATOOLS_FASTERQDUMP {
     // Paired-end data extracted by fasterq-dump (--split-3 the default) always creates
     // *_1.fastq *_2.fastq files but sometimes also an additional *.fastq file
     // for unpaired reads which we ignore here.
+    uncompressed_fastqs = meta.single_end ? '*.fastq' : '*_{1,2}.fastq'
+    uncompressed_fastq_regex =  meta.single_end ? '.*\\.fastq' : '.*_[12]\\.fastq'
     fastq_output = meta.single_end ? '*.fastq.gz' : '*_{1,2}.fastq.gz'
-    fastq_output_regex =  meta.single_end ? '.*\\.fastq.gz' : '.*_[12]\\.fastq\\.gz'
     md5_output = meta.single_end ? '*.fastq.gz.md5' : '*_{1,2}.fastq.gz.md5'
     """
     eval "\$(vdb-config -o n NCBI_SETTINGS | sed 's/[" ]//g')"
@@ -38,23 +39,22 @@ process SRATOOLS_FASTERQDUMP {
         --threads $task.cpus \\
         ${sra.name}
 
+    ## delete *.fastq if paired-end read data since this contains unpaired reads
+    if [[ -f ${sra.name}.fastq  && ! ${sra.name}.fastq =~ ${uncompressed_fastq_regex} ]]; then
+        rm ${sra.name}.fastq
+    fi
+
     pigz \\
         $args2 \\
         --no-name \\
         --processes $task.cpus \\
-        ${fastq_output}
+        ${uncompressed_fastqs}
 
     ## Rename FastQ files by meta.id
     if [ -f  ${sra.name}.fastq.gz ]; then
         mv ${sra.name}.fastq.gz ${meta.id}.fastq.gz
         md5sum ${meta.id}.fastq.gz > ${meta.id}.fastq.gz.md5
     fi
-
-    ## delete *.fastq.gz if paired reads since this contains unpaired reads
-    if [[ ! ${meta.id}.fastq.gz =~ ${fastq_output_regex} ]]; then
-        rm ${meta.id}.fastq.gz
-    fi
-
     if [ -f  ${sra.name}_1.fastq.gz ]; then
         mv ${sra.name}_1.fastq.gz ${meta.id}_1.fastq.gz
         md5sum ${meta.id}_1.fastq.gz > ${meta.id}_1.fastq.gz.md5
@@ -66,7 +66,7 @@ process SRATOOLS_FASTERQDUMP {
     fi
 
     ## remove .sra file
-    rm $(readlink ${sra.name})/${sra.name}.sra
+    rm \$(readlink ${sra.name})/${sra.name}.sra
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

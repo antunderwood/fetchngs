@@ -2,6 +2,7 @@
 process SRATOOLS_FASTERQDUMP {
     tag "$meta.id"
     label 'process_medium'
+    label 'error_retry_ignore'
 
     conda (params.enable_conda ? 'bioconda::sra-tools=2.11.0 conda-forge::pigz=2.6' : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

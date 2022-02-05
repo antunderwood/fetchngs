@@ -3,4 +3,5 @@ tasks:
     init: |
       curl -s https://get.nextflow.io | bash
       ./nextflow
-      echo $PWD
+      sudo mv nextflow /usr/local/bin/
+      ls /usr/local/bin/

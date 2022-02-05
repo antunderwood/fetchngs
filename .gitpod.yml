@@ -1,5 +1,2 @@
 image:
   file: .gitpod.dockerfile
-tasks:
-  - name: Install Nextflow
-    init: nextflow

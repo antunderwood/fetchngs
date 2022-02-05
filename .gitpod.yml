@@ -4,4 +4,3 @@ tasks:
       curl -s https://get.nextflow.io | bash
       ./nextflow
       sudo mv nextflow /usr/local/bin/
-      ls /usr/local/bin/

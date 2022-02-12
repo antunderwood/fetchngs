@@ -2,7 +2,7 @@
 process SRATOOLS_PREFETCH {
     tag "$id"
     label 'process_low'
-    label 'error_retry'
+    label 'error_retry_few'
 
     conda (params.enable_conda ? 'bioconda::sra-tools=2.11.0' : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

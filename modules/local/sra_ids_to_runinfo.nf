@@ -1,7 +1,7 @@
 
 process SRA_IDS_TO_RUNINFO {
     tag "$id"
-    label 'error_retry'
+    label 'error_retry_ignore_many'
 
     conda (params.enable_conda ? "conda-forge::python=3.9.5" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
